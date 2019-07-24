@@ -31,9 +31,8 @@ func TestLoadCdrcConfigMultipleFiles(t *testing.T) {
 		t.Error(err)
 	}
 	eCgrCfg, _ := NewDefaultCGRConfig()
-	eCgrCfg.CdrcProfiles = make(map[string][]*CdrcCfg)
 	// Default instance first
-	eCgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"] = []*CdrcCfg{
+	eCgrCfg.cdrcProfiles = []*CDRcCfg{
 		{
 			ID:                       utils.META_DEFAULT,
 			Enabled:                  false,
@@ -109,8 +108,6 @@ func TestLoadCdrcConfigMultipleFiles(t *testing.T) {
 					Value: NewRSRParsersMustCompile(utils.DynamicDataPrefix+utils.COST, true, utils.INFIELD_SEP)},
 			},
 		},
-	}
-	eCgrCfg.CdrcProfiles["/tmp/cgrates/cdrc1/in"] = []*CdrcCfg{
 		{
 			ID:                       "CDRC-CSV1",
 			Enabled:                  true,
@@ -186,8 +183,6 @@ func TestLoadCdrcConfigMultipleFiles(t *testing.T) {
 					Value: NewRSRParsersMustCompile(utils.DynamicDataPrefix+utils.COST, true, utils.INFIELD_SEP)},
 			},
 		},
-	}
-	eCgrCfg.CdrcProfiles["/tmp/cgrates/cdrc2/in"] = []*CdrcCfg{
 		{
 			ID:                       "CDRC-CSV2",
 			Enabled:                  true,
@@ -247,8 +242,6 @@ func TestLoadCdrcConfigMultipleFiles(t *testing.T) {
 					Value: NewRSRParsersMustCompile(utils.DynamicDataPrefix+utils.COST, true, utils.INFIELD_SEP)},
 			},
 		},
-	}
-	eCgrCfg.CdrcProfiles["/tmp/cgrates/cdrc3/in"] = []*CdrcCfg{
 		{
 			ID:                       "CDRC-CSV3",
 			Enabled:                  true,
@@ -325,7 +318,7 @@ func TestLoadCdrcConfigMultipleFiles(t *testing.T) {
 			},
 		},
 	}
-	if !reflect.DeepEqual(eCgrCfg.CdrcProfiles, cgrCfg.CdrcProfiles) {
-		t.Errorf("Expected: %s \n, received: %s", utils.ToJSON(eCgrCfg.CdrcProfiles), utils.ToJSON(cgrCfg.CdrcProfiles))
+	if !reflect.DeepEqual(eCgrCfg.cdrcProfiles, cgrCfg.cdrcProfiles) {
+		t.Errorf("Expected: %s \n, received: %s", utils.ToJSON(eCgrCfg.cdrcProfiles), utils.ToJSON(cgrCfg.cdrcProfiles))
 	}
 }

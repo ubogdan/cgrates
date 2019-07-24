@@ -24,7 +24,7 @@ import (
 	"github.com/cgrates/cgrates/utils"
 )
 
-type CdrcCfg struct {
+type CDRcCfg struct {
 	ID                       string              // free-form text identifying this CDRC instance
 	Enabled                  bool                // Enable/Disable the profile
 	DryRun                   bool                // Do not post CDRs to the server
@@ -50,7 +50,7 @@ type CdrcCfg struct {
 	CacheDumpFields          []*FCTemplate
 }
 
-func (self *CdrcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) error {
+func (self *CDRcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) error {
 	if jsnCfg == nil {
 		return nil
 	}
@@ -146,9 +146,9 @@ func (self *CdrcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) erro
 	return nil
 }
 
-// Clone itself into a new CdrcCfg
-func (self *CdrcCfg) Clone() *CdrcCfg {
-	clnCdrc := new(CdrcCfg)
+// Clone itself into a new CDRcCfg
+func (self *CDRcCfg) Clone() *CDRcCfg {
+	clnCdrc := new(CDRcCfg)
 	clnCdrc.ID = self.ID
 	clnCdrc.Enabled = self.Enabled
 	clnCdrc.DryRun = self.DryRun

@@ -130,6 +130,7 @@ func NewDefaultCGRConfig() (*CGRConfig, error) {
 	cfg := new(CGRConfig)
 	cfg.DataFolderPath = "/usr/share/cgrates/"
 	cfg.MaxCallDuration = time.Duration(3) * time.Hour // Hardcoded for now
+	cfg.dfltCdrcProfile = new(CDRcCfg)                 // init here so we can load properly later
 
 	cfg.generalCfg = new(GeneralCfg)
 	cfg.generalCfg.NodeID = utils.UUIDSha1Prefix()
@@ -146,7 +147,6 @@ func NewDefaultCGRConfig() (*CGRConfig, error) {
 	cfg.schedulerCfg = new(SchedulerCfg)
 	cfg.cdrsCfg = new(CdrsCfg)
 	cfg.CdreProfiles = make(map[string]*CdreCfg)
-	cfg.CdrcProfiles = make(map[string][]*CdrcCfg)
 	cfg.analyzerSCfg = new(AnalyzerSCfg)
 	cfg.sessionSCfg = new(SessionSCfg)
 	cfg.fsAgentCfg = new(FsAgentCfg)
@@ -189,9 +189,13 @@ func NewDefaultCGRConfig() (*CGRConfig, error) {
 	if err := cfg.loadFromJsonCfg(cgrJsonCfg); err != nil {
 		return nil, err
 	}
-
 	cfg.dfltCdreProfile = cfg.CdreProfiles[utils.META_DEFAULT].Clone() // So default will stay unique, will have nil pointer in case of no defaults loaded which is an extra check
-	cfg.dfltCdrcProfile = cfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"][0].Clone()
+	for _, CDRcCfg := range cfg.cdrcProfiles {
+		if CDRcCfg.ID == utils.META_DEFAULT {
+			cfg.dfltCdrcProfile = CDRcCfg.Clone()
+			break
+		}
+	}
 	dfltFsConnConfig = cfg.fsAgentCfg.EventSocketConns[0] // We leave it crashing here on purpose if no Connection defaults defined
 	dfltKamConnConfig = cfg.kamAgentCfg.EvapiConns[0]
 	dfltAstConnCfg = cfg.asteriskAgentCfg.AsteriskConns[0]
@@ -310,12 +314,12 @@ type CGRConfig struct {
 
 	// Cache defaults loaded from json and needing clones
 	dfltCdreProfile *CdreCfg // Default cdreConfig profile
-	dfltCdrcProfile *CdrcCfg // Default cdrcConfig profile
+	dfltCdrcProfile *CDRcCfg // Default cdrcConfig profile
 
-	CdreProfiles map[string]*CdreCfg   // Cdre config profiles
-	CdrcProfiles map[string][]*CdrcCfg // Number of CDRC instances running imports, format map[dirPath][]{Configs}
-	loaderCfg    []*LoaderSCfg         // LoaderS configs
-	httpAgentCfg HttpAgentCfgs         // HttpAgent configs
+	CdreProfiles map[string]*CdreCfg // Cdre config profiles
+	cdrcProfiles []*CDRcCfg          // Number of CDRC instances running imports, format map[dirPath][]{Configs}
+	loaderCfg    []*LoaderSCfg       // LoaderS configs
+	httpAgentCfg HttpAgentCfgs       // HttpAgent configs
 
 	ConfigReloads map[string]chan struct{} // Signals to specific entities that a config reload should occur
 
@@ -415,31 +419,29 @@ func (self *CGRConfig) checkConfigSanity() error {
 		}
 	}
 	// CDRC sanity checks
-	for _, cdrcCfgs := range self.CdrcProfiles {
-		for _, cdrcInst := range cdrcCfgs {
-			if !cdrcInst.Enabled {
-				continue
-			}
-			if len(cdrcInst.CDRsConns) == 0 {
-				return fmt.Errorf("<CDRC> Instance: %s, CdrC enabled but no CDRS defined!", cdrcInst.ID)
-			}
-			if !self.cdrsCfg.CDRSEnabled {
-				for _, conn := range cdrcInst.CDRsConns {
-					if conn.Address == utils.MetaInternal {
-						return errors.New("CDRS not enabled but referenced from CDRC")
-					}
+	for _, cdrcInst := range self.cdrcProfiles {
+		if !cdrcInst.Enabled {
+			continue
+		}
+		if len(cdrcInst.CDRsConns) == 0 {
+			return fmt.Errorf("<CDRC> Instance: %s, CdrC enabled but no CDRS defined!", cdrcInst.ID)
+		}
+		if !self.cdrsCfg.CDRSEnabled {
+			for _, conn := range cdrcInst.CDRsConns {
+				if conn.Address == utils.MetaInternal {
+					return errors.New("CDRS not enabled but referenced from CDRC")
 				}
 			}
-			if len(cdrcInst.ContentFields) == 0 {
-				return errors.New("CdrC enabled but no fields to be processed defined!")
-			}
-			if cdrcInst.CDRFormat == utils.MetaFileCSV {
-				for _, cdrFld := range cdrcInst.ContentFields {
-					for _, rsrFld := range cdrFld.Value {
-						if rsrFld.attrName != "" {
-							if _, errConv := strconv.Atoi(rsrFld.attrName); errConv != nil {
-								return fmt.Errorf("CDR fields must be indices in case of .csv files, have instead: %s", rsrFld.attrName)
-							}
+		}
+		if len(cdrcInst.ContentFields) == 0 {
+			return errors.New("CdrC enabled but no fields to be processed defined!")
+		}
+		if cdrcInst.CDRFormat == utils.MetaFileCSV {
+			for _, cdrFld := range cdrcInst.ContentFields {
+				for _, rsrFld := range cdrFld.Value {
+					if rsrFld.attrName != "" {
+						if _, errConv := strconv.Atoi(rsrFld.attrName); errConv != nil {
+							return fmt.Errorf("CDR fields must be indices in case of .csv files, have instead: %s", rsrFld.attrName)
 						}
 					}
 				}
@@ -821,7 +823,7 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 		return err
 	}
 
-	jsnCdrcCfg, err := jsnCfg.CdrcJsonCfg()
+	jsnCDRcCfg, err := jsnCfg.CdrcJsonCfg()
 	if err != nil {
 		return err
 	}
@@ -862,7 +864,7 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := self.diameterAgentCfg.loadFromJsonCfg(jsnDACfg, self.generalCfg.RsrSepatarot); err != nil {
+	if err := self.diameterAgentCfg.loadFromJsonCfg(jsnDACfg, self.generalCfg.RSRSep); err != nil {
 		return err
 	}
 
@@ -870,7 +872,7 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := self.radiusAgentCfg.loadFromJsonCfg(jsnRACfg, self.generalCfg.RsrSepatarot); err != nil {
+	if err := self.radiusAgentCfg.loadFromJsonCfg(jsnRACfg, self.generalCfg.RSRSep); err != nil {
 		return err
 	}
 
@@ -878,7 +880,7 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := self.dnsAgentCfg.loadFromJsonCfg(jsnDNSCfg, self.generalCfg.RsrSepatarot); err != nil {
+	if err := self.dnsAgentCfg.loadFromJsonCfg(jsnDNSCfg, self.generalCfg.RSRSep); err != nil {
 		return err
 	}
 
@@ -886,7 +888,7 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := self.httpAgentCfg.loadFromJsonCfg(jsnHttpAgntCfg, self.generalCfg.RsrSepatarot); err != nil {
+	if err := self.httpAgentCfg.loadFromJsonCfg(jsnHttpAgntCfg, self.generalCfg.RSRSep); err != nil {
 		return err
 	}
 
@@ -1015,7 +1017,7 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 					self.CdreProfiles[profileName] = self.dfltCdreProfile.Clone() // Clone default so we do not inherit pointers
 				}
 			}
-			if err = self.CdreProfiles[profileName].loadFromJsonCfg(jsnCdre1Cfg, self.generalCfg.RsrSepatarot); err != nil { // Update the existing profile with content from json config
+			if err = self.CdreProfiles[profileName].loadFromJsonCfg(jsnCdre1Cfg, self.generalCfg.RSRSep); err != nil { // Update the existing profile with content from json config
 				return err
 			}
 		}
@@ -1025,50 +1027,29 @@ func (self *CGRConfig) loadFromJsonCfg(jsnCfg *CgrJsonCfg) (err error) {
 		// self.loaderCfg = make([]*LoaderSCfg, len(jsnLoaderCfg))
 		for _, profile := range jsnLoaderCfg {
 			loadSCfgp := NewDfltLoaderSCfg()
-			loadSCfgp.loadFromJsonCfg(profile, self.generalCfg.RsrSepatarot)
+			loadSCfgp.loadFromJsonCfg(profile, self.generalCfg.RSRSep)
 			self.loaderCfg = append(self.loaderCfg, loadSCfgp) // use apend so the loaderS profile to be loaded from multiple files
 		}
 	}
 
-	if jsnCdrcCfg != nil {
-		for _, jsnCrc1Cfg := range jsnCdrcCfg {
+	if jsnCDRcCfg != nil {
+		for _, jsnCrc1Cfg := range jsnCDRcCfg {
 			if jsnCrc1Cfg.Id == nil || *jsnCrc1Cfg.Id == "" {
 				return utils.ErrCDRCNoProfileID
 			}
-			if *jsnCrc1Cfg.Id == utils.META_DEFAULT {
-				if self.dfltCdrcProfile == nil {
-					self.dfltCdrcProfile = new(CdrcCfg)
+			var cdrcInstCfg *CDRcCfg
+			for _, cdrcCfg := range self.cdrcProfiles {
+				if *jsnCrc1Cfg.Id == cdrcCfg.ID { // update existing
+					cdrcInstCfg = cdrcCfg
+					break
 				}
 			}
-			indxFound := -1 // Will be different than -1 if an instance with same id will be found
-			pathFound := "" // Will be populated with the path where slice of cfgs was found
-			var cdrcInstCfg *CdrcCfg
-			for path := range self.CdrcProfiles {
-				for i := range self.CdrcProfiles[path] {
-					if self.CdrcProfiles[path][i].ID == *jsnCrc1Cfg.Id {
-						indxFound = i
-						pathFound = path
-						cdrcInstCfg = self.CdrcProfiles[path][i]
-						break
-					}
-				}
-			}
-			if cdrcInstCfg == nil {
+			if cdrcInstCfg == nil { // none found
 				cdrcInstCfg = self.dfltCdrcProfile.Clone()
+				self.cdrcProfiles = append(self.cdrcProfiles, cdrcInstCfg)
 			}
-			if err := cdrcInstCfg.loadFromJsonCfg(jsnCrc1Cfg, self.generalCfg.RsrSepatarot); err != nil {
-				return err
-			}
-			if cdrcInstCfg.CDRInPath == "" {
-				return utils.ErrCDRCNoInPath
-			}
-			if _, hasDir := self.CdrcProfiles[cdrcInstCfg.CDRInPath]; !hasDir {
-				self.CdrcProfiles[cdrcInstCfg.CDRInPath] = make([]*CdrcCfg, 0)
-			}
-			if indxFound != -1 { // Replace previous config so we have inheritance
-				self.CdrcProfiles[pathFound][indxFound] = cdrcInstCfg
-			} else {
-				self.CdrcProfiles[cdrcInstCfg.CDRInPath] = append(self.CdrcProfiles[cdrcInstCfg.CDRInPath], cdrcInstCfg)
+			if err = cdrcInstCfg.loadFromJsonCfg(jsnCrc1Cfg, self.generalCfg.RSRSep); err != nil {
+				return
 			}
 		}
 	}
@@ -1215,6 +1196,10 @@ func (cfg *CGRConfig) ApierCfg() *ApierCfg {
 	return cfg.apier
 }
 
+func (cfg *CGRConfig) CDRcProfiles() []*CDRcCfg {
+	return cfg.cdrcProfiles
+}
+
 // Call implements rpcclient.RpcClientConnection interface for internal RPC
 func (cSv1 *CGRConfig) Call(serviceMethod string,
 	args interface{}, reply interface{}) error {
@@ -1292,7 +1277,7 @@ func (cfg *CGRConfig) V1GetConfigSection(args *StringWithArgDispatcher, reply *m
 	case Apier:
 		jsonString = utils.ToJSON(cfg.ApierCfg())
 	case CDRC_JSN:
-		jsonString = utils.ToJSON(cfg.CdrcProfiles)
+		jsonString = utils.ToJSON(cfg.cdrcProfiles)
 	case CDRE_JSN:
 		jsonString = utils.ToJSON(cfg.CdreProfiles)
 	default:

@@ -26,7 +26,7 @@ import (
 	"github.com/cgrates/cgrates/utils"
 )
 
-var cdrcCfg = CdrcCfg{
+var cdrcCfg = CDRcCfg{
 	ID:                       utils.MetaDefault,
 	CDRsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
 	CDRFormat:                "csv",
@@ -62,7 +62,7 @@ var cdrcCfg = CdrcCfg{
 }
 
 func TestCdrcCfgloadFromJsonCfg(t *testing.T) {
-	var cdrccfg, expected CdrcCfg
+	var cdrccfg, expected CDRcCfg
 	if err := cdrccfg.loadFromJsonCfg(nil, utils.INFIELD_SEP); err != nil {
 		t.Error(err)
 	} else if !reflect.DeepEqual(cdrccfg, expected) {

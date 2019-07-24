@@ -200,7 +200,7 @@ func TestCgrCfgCDRC(t *testing.T) {
 ],
 }`
 	eCgrCfg, _ := NewDefaultCGRConfig()
-	eCgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"] = []*CdrcCfg{
+	eCgrCfg.cdrcProfiles = []*CDRcCfg{
 		{
 			ID:                       utils.META_DEFAULT,
 			Enabled:                  true,
@@ -266,10 +266,10 @@ func TestCgrCfgCDRC(t *testing.T) {
 	}
 	if cgrCfg, err := NewCGRConfigFromJsonStringWithDefaults(JSN_RAW_CFG); err != nil {
 		t.Error(err)
-	} else if !reflect.DeepEqual(eCgrCfg.CdrcProfiles, cgrCfg.CdrcProfiles) {
+	} else if !reflect.DeepEqual(eCgrCfg.cdrcProfiles, cgrCfg.cdrcProfiles) {
 		t.Errorf("Expected: %+v,\n received: %+v",
-			utils.ToJSON(eCgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"][0]),
-			utils.ToJSON(cgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"][0]))
+			utils.ToJSON(eCgrCfg.cdrcProfiles),
+			utils.ToJSON(cgrCfg.cdrcProfiles))
 	}
 }
 
@@ -1578,7 +1578,7 @@ func TestCgrMigratorCfgDefault(t *testing.T) {
 
 func TestCDRCWithDefault(t *testing.T) {
 	eCgrCfg, _ := NewDefaultCGRConfig()
-	eCgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"] = []*CdrcCfg{
+	eCgrCfg.cdrcProfiles = []*CDRcCfg{
 		{
 			ID:                       utils.META_DEFAULT,
 			Enabled:                  false,
@@ -1658,10 +1658,10 @@ func TestCDRCWithDefault(t *testing.T) {
 			},
 		},
 	}
-	if !reflect.DeepEqual(eCgrCfg.CdrcProfiles, cgrCfg.CdrcProfiles) {
+	if !reflect.DeepEqual(eCgrCfg.cdrcProfiles, cgrCfg.cdrcProfiles) {
 		t.Errorf("Expected: %+v,\n received: %+v",
-			utils.ToJSON(eCgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"][0]),
-			utils.ToJSON(cgrCfg.CdrcProfiles["/var/spool/cgrates/cdrc/in"][0]))
+			utils.ToJSON(eCgrCfg.cdrcProfiles),
+			utils.ToJSON(cgrCfg.cdrcProfiles))
 	}
 }
 
