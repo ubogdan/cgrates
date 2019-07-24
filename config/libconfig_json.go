@@ -155,13 +155,13 @@ type CdrcJsonCfg struct {
 	Run_delay                   *int
 	Cdr_in_path                 *string
 	Cdr_out_path                *string
-	Failed_calls_prefix         *string
 	Cdr_root_path               *string
 	Cdr_source_id               *string
 	Filters                     *[]string
 	Tenant                      *string
-	Continue_on_success         *bool
-	Max_open_files              *int
+	Continue                    *bool
+	Concurrent_requests         *int
+	Failed_calls_prefix         *string
 	Partial_record_cache        *string
 	Partial_cache_expiry_action *string
 	Header_fields               *[]*FcTemplateJsonCfg
@@ -299,7 +299,7 @@ type DiameterAgentJsonCfg struct {
 	Origin_realm         *string
 	Vendor_id            *int
 	Product_name         *string
-	Max_active_requests  *int
+	Concurrent_requests  *int
 	Synced_conn_requests *bool
 	Asr_template         *string
 	Templates            map[string][]*FcTemplateJsonCfg

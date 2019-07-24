@@ -420,11 +420,11 @@ func (self *CGRConfig) checkConfigSanity() error {
 			if !cdrcInst.Enabled {
 				continue
 			}
-			if len(cdrcInst.CdrsConns) == 0 {
+			if len(cdrcInst.CDRsConns) == 0 {
 				return fmt.Errorf("<CDRC> Instance: %s, CdrC enabled but no CDRS defined!", cdrcInst.ID)
 			}
 			if !self.cdrsCfg.CDRSEnabled {
-				for _, conn := range cdrcInst.CdrsConns {
+				for _, conn := range cdrcInst.CDRsConns {
 					if conn.Address == utils.MetaInternal {
 						return errors.New("CDRS not enabled but referenced from CDRC")
 					}
@@ -433,7 +433,7 @@ func (self *CGRConfig) checkConfigSanity() error {
 			if len(cdrcInst.ContentFields) == 0 {
 				return errors.New("CdrC enabled but no fields to be processed defined!")
 			}
-			if cdrcInst.CdrFormat == utils.MetaFileCSV {
+			if cdrcInst.CDRFormat == utils.MetaFileCSV {
 				for _, cdrFld := range cdrcInst.ContentFields {
 					for _, rsrFld := range cdrFld.Value {
 						if rsrFld.attrName != "" {

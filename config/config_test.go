@@ -205,19 +205,19 @@ func TestCgrCfgCDRC(t *testing.T) {
 			ID:                       utils.META_DEFAULT,
 			Enabled:                  true,
 			DryRun:                   false,
-			CdrsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
-			CdrFormat:                utils.MetaFileCSV,
-			FieldSeparator:           rune(','),
+			CDRsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
+			CDRFormat:                utils.MetaFileCSV,
+			FieldSeparator:           ",",
 			Timezone:                 "",
 			RunDelay:                 0,
-			MaxOpenFiles:             1024,
+			ConcurrentReqs:           1024,
 			CDRInPath:                "/var/spool/cgrates/cdrc/in",
 			CDROutPath:               "/var/spool/cgrates/cdrc/out",
 			FailedCallsPrefix:        "missed_calls",
 			CDRRootPath:              utils.HierarchyPath([]string{""}),
-			CdrSourceId:              "cdrc_csv",
+			CDRSourceID:              "cdrc_csv",
 			Filters:                  []string{},
-			ContinueOnSuccess:        false,
+			Continue:                 false,
 			PartialRecordCache:       time.Duration(10 * time.Second),
 			PartialCacheExpiryAction: "*dump_to_file",
 			HeaderFields:             make([]*FCTemplate, 0),
@@ -879,7 +879,7 @@ func TestCgrCfgJSONDefaultsDiameterAgentCfg(t *testing.T) {
 		OriginRealm:       "cgrates.org",
 		VendorId:          0,
 		ProductName:       "CGRateS",
-		MaxActiveReqs:     -1,
+		ConcurrentReqs:    -1,
 		RequestProcessors: nil,
 	}
 
@@ -907,8 +907,8 @@ func TestCgrCfgJSONDefaultsDiameterAgentCfg(t *testing.T) {
 	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.ProductName, testDA.ProductName) {
 		t.Errorf("received: %+v, expecting: %+v", cgrCfg.diameterAgentCfg.ProductName, testDA.ProductName)
 	}
-	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.MaxActiveReqs, testDA.MaxActiveReqs) {
-		t.Errorf("received: %+v, expecting: %+v", cgrCfg.diameterAgentCfg.MaxActiveReqs, testDA.MaxActiveReqs)
+	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.ConcurrentReqs, testDA.ConcurrentReqs) {
+		t.Errorf("received: %+v, expecting: %+v", cgrCfg.diameterAgentCfg.ConcurrentReqs, testDA.ConcurrentReqs)
 	}
 	if !reflect.DeepEqual(cgrCfg.diameterAgentCfg.RequestProcessors, testDA.RequestProcessors) {
 		t.Errorf("expecting: %+v, received: %+v", testDA.RequestProcessors, cgrCfg.diameterAgentCfg.RequestProcessors)
@@ -1583,19 +1583,19 @@ func TestCDRCWithDefault(t *testing.T) {
 			ID:                       utils.META_DEFAULT,
 			Enabled:                  false,
 			DryRun:                   false,
-			CdrsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
-			CdrFormat:                utils.MetaFileCSV,
-			FieldSeparator:           rune(','),
+			CDRsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
+			CDRFormat:                utils.MetaFileCSV,
+			FieldSeparator:           ",",
 			Timezone:                 "",
 			RunDelay:                 0,
-			MaxOpenFiles:             1024,
+			ConcurrentReqs:           1024,
 			CDRInPath:                "/var/spool/cgrates/cdrc/in",
 			CDROutPath:               "/var/spool/cgrates/cdrc/out",
 			FailedCallsPrefix:        "missed_calls",
 			CDRRootPath:              utils.HierarchyPath([]string{""}),
-			CdrSourceId:              "cdrc_csv",
+			CDRSourceID:              "cdrc_csv",
 			Filters:                  []string{},
-			ContinueOnSuccess:        false,
+			Continue:                 false,
 			PartialRecordCache:       time.Duration(10 * time.Second),
 			PartialCacheExpiryAction: "*dump_to_file",
 			HeaderFields:             make([]*FCTemplate, 0),

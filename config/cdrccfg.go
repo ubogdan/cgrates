@@ -28,20 +28,20 @@ type CdrcCfg struct {
 	ID                       string              // free-form text identifying this CDRC instance
 	Enabled                  bool                // Enable/Disable the profile
 	DryRun                   bool                // Do not post CDRs to the server
-	CdrsConns                []*RemoteHost       // The address where CDRs can be reached
-	CdrFormat                string              // The type of CDR file to process <*csv|*opensips_flatstore>
-	FieldSeparator           rune                // The separator to use when reading csvs
+	CDRsConns                []*RemoteHost       // The address where CDRs can be reached
+	CDRFormat                string              // The type of CDR file to process <*csv|*opensips_flatstore>
+	FieldSeparator           string              // The separator to use when reading csvs
 	Timezone                 string              // timezone for timestamps where not specified <""|UTC|Local|$IANA_TZ_DB>
 	RunDelay                 time.Duration       // Delay between runs, 0 for inotify driven requests
-	MaxOpenFiles             int                 // Maximum number of files opened simultaneously
+	ConcurrentReqs           int                 // Maximum number of files opened simultaneously
 	CDRInPath                string              // Folder to process CDRs from
 	CDROutPath               string              // Folder to move processed CDRs to
-	FailedCallsPrefix        string              // Used in case of flatstore CDRs to avoid searching for BYE records
 	CDRRootPath              utils.HierarchyPath // used for XML CDRs to specify the path towards CDR elements
-	CdrSourceId              string              // Source identifier for the processed CDRs
+	CDRSourceID              string              // Source identifier for the processed CDRs
 	Filters                  []string
 	Tenant                   RSRParsers
-	ContinueOnSuccess        bool          // Continue after execution
+	Continue                 bool          // Continue after execution
+	FailedCallsPrefix        string        // Used in case of flatstore CDRs to avoid searching for BYE records
 	PartialRecordCache       time.Duration // Duration to cache partial records when not pairing
 	PartialCacheExpiryAction string
 	HeaderFields             []*FCTemplate
@@ -65,18 +65,17 @@ func (self *CdrcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) erro
 		self.DryRun = *jsnCfg.Dry_run
 	}
 	if jsnCfg.Cdrs_conns != nil {
-		self.CdrsConns = make([]*RemoteHost, len(*jsnCfg.Cdrs_conns))
+		self.CDRsConns = make([]*RemoteHost, len(*jsnCfg.Cdrs_conns))
 		for idx, jsnHaCfg := range *jsnCfg.Cdrs_conns {
-			self.CdrsConns[idx] = NewDfltRemoteHost()
-			self.CdrsConns[idx].loadFromJsonCfg(jsnHaCfg)
+			self.CDRsConns[idx] = NewDfltRemoteHost()
+			self.CDRsConns[idx].loadFromJsonCfg(jsnHaCfg)
 		}
 	}
 	if jsnCfg.Cdr_format != nil {
-		self.CdrFormat = *jsnCfg.Cdr_format
+		self.CDRFormat = *jsnCfg.Cdr_format
 	}
 	if jsnCfg.Field_separator != nil && len(*jsnCfg.Field_separator) > 0 {
-		sepStr := *jsnCfg.Field_separator
-		self.FieldSeparator = rune(sepStr[0])
+		self.FieldSeparator = *jsnCfg.Field_separator
 	}
 	if jsnCfg.Timezone != nil {
 		self.Timezone = *jsnCfg.Timezone
@@ -84,8 +83,8 @@ func (self *CdrcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) erro
 	if jsnCfg.Run_delay != nil {
 		self.RunDelay = time.Duration(*jsnCfg.Run_delay) * time.Second
 	}
-	if jsnCfg.Max_open_files != nil {
-		self.MaxOpenFiles = *jsnCfg.Max_open_files
+	if jsnCfg.Concurrent_requests != nil {
+		self.ConcurrentReqs = *jsnCfg.Concurrent_requests
 	}
 	if jsnCfg.Cdr_in_path != nil {
 		self.CDRInPath = *jsnCfg.Cdr_in_path
@@ -100,7 +99,7 @@ func (self *CdrcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) erro
 		self.CDRRootPath = utils.ParseHierarchyPath(*jsnCfg.Cdr_root_path, "")
 	}
 	if jsnCfg.Cdr_source_id != nil {
-		self.CdrSourceId = *jsnCfg.Cdr_source_id
+		self.CDRSourceID = *jsnCfg.Cdr_source_id
 	}
 	if jsnCfg.Filters != nil {
 		self.Filters = make([]string, len(*jsnCfg.Filters))
@@ -113,8 +112,8 @@ func (self *CdrcCfg) loadFromJsonCfg(jsnCfg *CdrcJsonCfg, separator string) erro
 			return err
 		}
 	}
-	if jsnCfg.Continue_on_success != nil {
-		self.ContinueOnSuccess = *jsnCfg.Continue_on_success
+	if jsnCfg.Continue != nil {
+		self.Continue = *jsnCfg.Continue
 	}
 	if jsnCfg.Partial_record_cache != nil {
 		if self.PartialRecordCache, err = utils.ParseDurationWithNanosecs(*jsnCfg.Partial_record_cache); err != nil {
@@ -153,16 +152,16 @@ func (self *CdrcCfg) Clone() *CdrcCfg {
 	clnCdrc.ID = self.ID
 	clnCdrc.Enabled = self.Enabled
 	clnCdrc.DryRun = self.DryRun
-	clnCdrc.CdrsConns = make([]*RemoteHost, len(self.CdrsConns))
-	for idx, cdrConn := range self.CdrsConns {
+	clnCdrc.CDRsConns = make([]*RemoteHost, len(self.CDRsConns))
+	for idx, cdrConn := range self.CDRsConns {
 		clonedVal := *cdrConn
-		clnCdrc.CdrsConns[idx] = &clonedVal
+		clnCdrc.CDRsConns[idx] = &clonedVal
 	}
-	clnCdrc.CdrFormat = self.CdrFormat
+	clnCdrc.CDRFormat = self.CDRFormat
 	clnCdrc.FieldSeparator = self.FieldSeparator
 	clnCdrc.Timezone = self.Timezone
 	clnCdrc.RunDelay = self.RunDelay
-	clnCdrc.MaxOpenFiles = self.MaxOpenFiles
+	clnCdrc.ConcurrentReqs = self.ConcurrentReqs
 	clnCdrc.CDRInPath = self.CDRInPath
 	clnCdrc.CDROutPath = self.CDROutPath
 	clnCdrc.CDRRootPath = make(utils.HierarchyPath, len(self.CDRRootPath))
@@ -175,8 +174,8 @@ func (self *CdrcCfg) Clone() *CdrcCfg {
 		clnCdrc.Filters[i] = fltr
 	}
 	clnCdrc.Tenant = self.Tenant
-	clnCdrc.CdrSourceId = self.CdrSourceId
-	clnCdrc.ContinueOnSuccess = self.ContinueOnSuccess
+	clnCdrc.CDRSourceID = self.CDRSourceID
+	clnCdrc.Continue = self.Continue
 	clnCdrc.PartialRecordCache = self.PartialRecordCache
 	clnCdrc.PartialCacheExpiryAction = self.PartialCacheExpiryAction
 	clnCdrc.HeaderFields = make([]*FCTemplate, len(self.HeaderFields))

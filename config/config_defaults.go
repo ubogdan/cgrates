@@ -248,7 +248,7 @@ const CGRATES_CFG_JSON = `
 		"field_separator": ",",							// separator used in case of csv files
 		"timezone": "",									// timezone for timestamps where not specified <""|UTC|Local|$IANA_TZ_DB>
 		"run_delay": 0,									// sleep interval in seconds between consecutive runs, 0 to use automation via inotify
-		"max_open_files": 1024,							// maximum simultaneous files to process, 0 for unlimited
+		"concurrent_requests": 1024,					// maximum simultaneous files to process, 0 for unlimited
 		"cdr_in_path": "/var/spool/cgrates/cdrc/in",	// absolute path towards the directory where the CDRs are stored
 		"cdr_out_path": "/var/spool/cgrates/cdrc/out",	// absolute path towards the directory where processed CDRs will be moved
 		"failed_calls_prefix": "missed_calls",			// used in case of flatstore CDRs to avoid searching for BYE records
@@ -256,7 +256,7 @@ const CGRATES_CFG_JSON = `
 		"cdr_source_id": "cdrc_csv",					// free form field, tag identifying the source of the CDRs within CDRS database
 		"filters" :[],									// limit parsing based on the filters
 		"tenant": "",									// tenant used by import
-		"continue_on_success": false,					// continue to the next template if executed
+		"continue": false,								// continue to the next template if executed
 		"partial_record_cache": "10s",					// duration to cache partial records when not pairing
 		"partial_cache_expiry_action": "*dump_to_file",	// action taken when cache when records in cache are timed-out <*dump_to_file|*post_cdr>
 		"header_fields": [],							// template of the import header fields
@@ -377,7 +377,7 @@ const CGRATES_CFG_JSON = `
 	"origin_realm": "cgrates.org",								// diameter Origin-Realm AVP used in replies
 	"vendor_id": 0,												// diameter Vendor-Id AVP used in replies
 	"product_name": "CGRateS",									// diameter Product-Name AVP used in replies
-	"max_active_requests": -1,									// limit the number of active requests processed by the server <-1|0-n>
+	"concurrent_requests": -1,									// limit the number of active requests processed by the server <-1|0-n>
 	"synced_conn_requests": false,								// process one request at the time per connection
 	"asr_template": "",											// enable AbortSession message being sent to client on DisconnectSession
 	"templates":{												// default message templates

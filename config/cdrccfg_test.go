@@ -28,15 +28,15 @@ import (
 
 var cdrcCfg = CdrcCfg{
 	ID:                       utils.MetaDefault,
-	CdrsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
-	CdrFormat:                "csv",
-	FieldSeparator:           ',',
-	MaxOpenFiles:             1024,
+	CDRsConns:                []*RemoteHost{{Address: utils.MetaInternal}},
+	CDRFormat:                "csv",
+	FieldSeparator:           ",",
+	ConcurrentReqs:           1024,
 	CDRInPath:                "/var/spool/cgrates/cdrc/in",
 	CDROutPath:               "/var/spool/cgrates/cdrc/out",
 	FailedCallsPrefix:        "missed_calls",
 	CDRRootPath:              []string{""},
-	CdrSourceId:              "cdrc_csv",
+	CDRSourceID:              "cdrc_csv",
 	Filters:                  []string{},
 	Tenant:                   NewRSRParsersMustCompile("cgrates.org", true, utils.INFIELD_SEP),
 	PartialRecordCache:       time.Duration(10 * time.Second),
@@ -86,7 +86,7 @@ func TestCdrcCfgloadFromJsonCfg(t *testing.T) {
 		"field_separator": ",",							// separator used in case of csv files
 		"timezone": "",									// timezone for timestamps where not specified <""|UTC|Local|$IANA_TZ_DB>
 		"run_delay": 0,									// sleep interval in seconds between consecutive runs, 0 to use automation via inotify
-		"max_open_files": 1024,							// maximum simultaneous files to process, 0 for unlimited
+		"concurrent_requests": 1024,					// maximum simultaneous files to process, 0 for unlimited
 		"cdr_in_path": "/var/spool/cgrates/cdrc/in",	// absolute path towards the directory where the CDRs are stored
 		"cdr_out_path": "/var/spool/cgrates/cdrc/out",	// absolute path towards the directory where processed CDRs will be moved
 		"failed_calls_prefix": "missed_calls",			// used in case of flatstore CDRs to avoid searching for BYE records
@@ -94,7 +94,7 @@ func TestCdrcCfgloadFromJsonCfg(t *testing.T) {
 		"cdr_source_id": "cdrc_csv",					// free form field, tag identifying the source of the CDRs within CDRS database
 		"filters" :[],									// new filters used in FilterS subsystem
 		"tenant": "cgrates.org",						// default tenant
-		"continue_on_success": false,					// continue to the next template if executed
+		"continue": false,					// continue to the next template if executed
 		"partial_record_cache": "10s",					// duration to cache partial records when not pairing
 		"partial_cache_expiry_action": "*dump_to_file",	// action taken when cache when records in cache are timed-out <*dump_to_file|*post_cdr>
 		"header_fields": [],							// template of the import header fields
