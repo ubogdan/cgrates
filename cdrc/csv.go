@@ -20,18 +20,14 @@ package cdrc
 
 import (
 	"encoding/csv"
-	"encoding/json"
-	"fmt"
-	"net"
-	"strconv"
-	"strings"
-
-	"github.com/cgrates/cgrates/config"
-	"github.com/cgrates/cgrates/engine"
-	"github.com/cgrates/cgrates/utils"
-	"github.com/cgrates/rpcclient"
 )
 
+// CSVcdrcReader implements CDRCReader interface for .csv data
+type CSVcdrcReader struct {
+	csvReader *csv.Reader
+}
+
+/*
 func NewCsvRecordsProcessor(csvReader *csv.Reader, timezone, fileName string,
 	dfltCdrcCfg *config.CdrcCfg, cdrcCfgs []*config.CdrcCfg,
 	httpSkipTlsCheck bool, cacheDumpFields []*config.FCTemplate,
@@ -282,3 +278,4 @@ func (cP *csvProvider) AsNavigableMap([]*config.FCTemplate) (
 func (cP *csvProvider) RemoteHost() net.Addr {
 	return utils.LocalAddr()
 }
+*/

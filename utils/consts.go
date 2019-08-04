@@ -199,6 +199,7 @@ const (
 	MetaFileXML                   = "*file_xml"
 	CDRE                          = "cdre"
 	CDRC                          = "cdrc"
+	CDRc                          = "CDRc"
 	MASK_CHAR                     = "*"
 	CONCATENATED_KEY_SEP          = ":"
 	FORKED_CDR                    = "forked_cdr"

@@ -1196,7 +1196,7 @@ func (cfg *CGRConfig) ApierCfg() *ApierCfg {
 	return cfg.apier
 }
 
-func (cfg *CGRConfig) CDRcProfiles() []*CDRcCfg {
+func (cfg *CGRConfig) CDRcProfiles() (cdrcPrlfs []*CDRcCfg) {
 	return cfg.cdrcProfiles
 }
 

@@ -19,10 +19,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 package cdrc
 
 import (
+	"fmt"
+
+	"github.com/cgrates/cgrates/config"
 	"github.com/cgrates/cgrates/utils"
 )
 
-type CDRCReader interface {
+type CDRcReader interface {
+	ID() string                     // configuration identifier
+	Init(args interface{}) error    // init will initialize the Reader, ie: open the file to read or http connection
 	Read() (*utils.CGREvent, error) // Process a single record in the CDR file, return a slice of CDRs since based on configuration we can have more templates
 	Processed() int64               // number of records processed
+	Close() error                   // called when the reader should stop processing
+}
+
+// NewCDRCReader instantiates
+func NewCDRcReader(cfg *config.CGRConfig, cfgIdx int) (cdrRdr CDRcReader, err error) {
+	cfgPrfl := cfg.CDRCProfiles()[prflIdx]
+	switch cfgPrfl.CDRFormat {
+	default:
+		err = fmt.Errorf("unsupported CDR format: <%s>", cfgPrfl.CdrFormat)
+	}
+	return
 }
