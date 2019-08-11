@@ -23,12 +23,14 @@ import (
 	"sync"
 
 	"github.com/cgrates/cgrates/config"
+	"github.com/cgrates/cgrates/utils"
 )
 
 // NewCDRCService instantiates the CDRCService
-func NewCDRcService(cfg *config.CGRConfig, cfgRld chan string) (cdrcS *CDRCService, err error) {
+func NewCDRcService(cfg *config.CGRConfig, cdrS rpcclient.RpcClientConnection,
+	cfgRld chan struct{}) (cdrcS *CDRcService, err error) {
 	cdrcS = &CDRcService{
-		rdrs:   make(map[string]CDRCReader),
+		rdrs:   make(map[string][]CDRcReader),
 		cfgRld: cfgRld,
 	}
 	for _, cfg := range cfg.CDRcProfiles() {
@@ -37,9 +39,10 @@ func NewCDRcService(cfg *config.CGRConfig, cfgRld chan string) (cdrcS *CDRCServi
 		}
 
 	}
-	if len(cdrS.rdrs) == 0 {
+	if len(cdrcS.rdrs) == 0 {
 		return nil, nil // no CDRC profiles enabled
 	}
+	return
 }
 
 // CDRCService is managing the CDRCReaders
@@ -47,8 +50,8 @@ type CDRcService struct {
 	sync.RWMutex
 	cfg    *config.CGRConfig
 	rdrs   map[string][]CDRcReader // list of readers on specific paths map[path]reader
-	cfgRld chan struct{}           // signal the need of config reloading - chan path / *any+
-
+	cfgRld chan struct{}           // signal the need of config reloading - chan path / *any
+	cdrS   rpcclient.RpcClientConnection
 }
 
 // ListenAndServe loops keeps the service alive
@@ -73,10 +76,10 @@ func (cS *CDRcService) handleReloads() {
 		addIDs := make(map[string]struct{})      // IDs which need to be added to CDRcService
 		remIDs := make(map[string]struct{})      // IDs which need to be removed from CDRcService
 		// index config IDs
-		for i, cgrCfg := range config.CDRcProfiles() {
-			cfgIDs[cgrCfg.ID] = &cdrcCfgRef{path: cgrCfg.Path, idx: i}
+		for i, cgrCfg := range cS.cfg.CDRcProfiles() {
+			cfgIDs[cgrCfg.ID] = &cdrcCfgRef{path: cgrCfg.CDRInPath, idx: i}
 		}
-		ccS.Lock()
+		cS.Lock()
 		// index in use IDs
 		for path, rdrs := range cS.rdrs {
 			for i, rdr := range rdrs {
@@ -84,15 +87,15 @@ func (cS *CDRcService) handleReloads() {
 			}
 		}
 		// find out removed ids
-		for id, ref := range inUseIDs {
+		for id := range inUseIDs {
 			if _, has := cfgIDs[id]; !has {
 				remIDs[id] = struct{}{}
 			}
 		}
 		// find out added ids
-		for id, path := range cfgIDs {
+		for id := range cfgIDs {
 			if _, has := inUseIDs[id]; !has {
-				addIDs[id] = path
+				addIDs[id] = struct{}{}
 			}
 		}
 		for id := range remIDs {
@@ -106,13 +109,13 @@ func (cS *CDRcService) handleReloads() {
 		// add new ids:
 		for id := range addIDs {
 			cfgRef := cfgIDs[id]
-			if newRdr, err := NewCDRcReader(cS.cfg); err != nil {
+			if newRdr, err := NewCDRcReader(cS.cfg, cfgRef.idx); err != nil {
 				utils.Logger.Warning(
 					fmt.Sprintf(
 						"<%s> error reloading config with ID: <%s>, err: <%s>",
-						utils.CDRc, err.Error()))
+						utils.CDRc, id, err.Error()))
 			} else {
-				cS.rdrs[path] = append(cS.rdrs[path], newRdr)
+				cS.rdrs[cfgRef.path] = append(cS.rdrs[cfgRef.path], newRdr)
 			}
 
 		}

@@ -28,17 +28,17 @@ import (
 type CDRcReader interface {
 	ID() string                     // configuration identifier
 	Init(args interface{}) error    // init will initialize the Reader, ie: open the file to read or http connection
-	Read() (*utils.CGREvent, error) // Process a single record in the CDR file, return a slice of CDRs since based on configuration we can have more templates
+	Read() (*utils.CGREvent, error) // Process a single record in the CDR file
 	Processed() int64               // number of records processed
 	Close() error                   // called when the reader should stop processing
 }
 
 // NewCDRCReader instantiates
 func NewCDRcReader(cfg *config.CGRConfig, cfgIdx int) (cdrRdr CDRcReader, err error) {
-	cfgPrfl := cfg.CDRCProfiles()[prflIdx]
+	cfgPrfl := cfg.CDRcProfiles()[cfgIdx]
 	switch cfgPrfl.CDRFormat {
 	default:
-		err = fmt.Errorf("unsupported CDR format: <%s>", cfgPrfl.CdrFormat)
+		err = fmt.Errorf("unsupported CDR format: <%s>", cfgPrfl.CDRFormat)
 	}
 	return
 }

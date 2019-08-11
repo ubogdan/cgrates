@@ -79,83 +79,33 @@ var (
 	cfg *config.CGRConfig
 )
 
-func startCdrcs(internalCdrSChan, internalRaterChan, internalDispatcherSChan chan rpcclient.RpcClientConnection,
+func startCDRcS(intCdrSChan,  intDispatcherSChan chan rpcclient.RpcClientConnection,
 	filterSChan chan *engine.FilterS, exitChan chan bool) {
 	filterS := <-filterSChan
 	filterSChan <- filterS
-	cdrcInitialized := false           // Control whether the cdrc was already initialized (so we don't reload in that case)
-	var cdrcChildrenChan chan struct{} // Will use it to communicate with the children of one fork
-	var dispatcherSConn rpcclient.RpcClientConnection
+	intChan := intCdrSChan
 	if cfg.DispatcherSCfg().Enabled {
-		dispatcherSConn = <-internalDispatcherSChan
-		internalDispatcherSChan <- dispatcherSConn
+		intChan = intDispatcherSChan
 	}
-	for {
-		select {
-		case <-exitChan: // Stop forking CDRCs
-			break
-		case <-cfg.ConfigReloads[utils.CDRC]: // Consume the load request and wait for a new one
-			if cdrcInitialized {
-				utils.Logger.Info("<CDRC> Configuration reload")
-				close(cdrcChildrenChan) // Stop all the children of the previous run
-			}
-			cdrcChildrenChan = make(chan struct{})
-		}
-		// Start CDRCs
-		for _, cdrcCfgs := range cfg.CdrcProfiles {
-			var enabledCfgs []*config.CdrcCfg
-			for _, cdrcCfg := range cdrcCfgs { // Take a random config out since they should be the same
-				if cdrcCfg.Enabled {
-					enabledCfgs = append(enabledCfgs, cdrcCfg)
-				}
-			}
-			if len(enabledCfgs) != 0 {
-				go startCdrc(internalCdrSChan, internalRaterChan, enabledCfgs,
-					cfg.GeneralCfg().HttpSkipTlsVerify, dispatcherSConn,
-					filterSChan, cdrcChildrenChan, exitChan)
-			} else {
-				utils.Logger.Info("<CDRC> No enabled CDRC clients")
-			}
-		}
-		cdrcInitialized = true // Initialized
-	}
-}
-
-// Fires up a cdrc instance
-func startCdrc(internalCdrSChan, internalRaterChan chan rpcclient.RpcClientConnection, cdrcCfgs []*config.CdrcCfg, httpSkipTlsCheck bool,
-	dispatcherSConn rpcclient.RpcClientConnection, filterSChan chan *engine.FilterS, closeChan chan struct{}, exitChan chan bool) {
-	filterS := <-filterSChan
-	filterSChan <- filterS
-	var err error
-	var cdrsConn rpcclient.RpcClientConnection
-	if cfg.DispatcherSCfg().Enabled {
-		cdrsConn = dispatcherSConn
-	} else {
-		cdrcCfg := cdrcCfgs[0]
-		cdrsConn, err = engine.NewRPCPool(rpcclient.POOL_FIRST, cfg.TlsCfg().ClientKey,
-			cfg.TlsCfg().ClientCerificate, cfg.TlsCfg().CaCertificate,
-			cfg.GeneralCfg().ConnectAttempts, cfg.GeneralCfg().Reconnects,
-			cfg.GeneralCfg().ConnectTimeout, cfg.GeneralCfg().ReplyTimeout,
-			cdrcCfg.CdrsConns, internalCdrSChan, false)
+	var cdrSConn rpcclient.RpcClientConnection
+	if cdrSConn, err = engine.NewRPCPool(rpcclient.POOL_FIRST,
+			cfg.TlsCfg().ClientKey, cfg.TlsCfg().ClientCerificate,
+			cfg.TlsCfg().CaCertificate, cfg.GeneralCfg().ConnectAttempts,
+			cfg.GeneralCfg().Reconnects, cfg.GeneralCfg().ConnectTimeout,
+			cfg.GeneralCfg().ReplyTimeout, cfg.SessionSCfg().ChargerSConns,
+			internalChargerSChan, false)
 		if err != nil {
-			utils.Logger.Crit(fmt.Sprintf("<CDRC> Could not connect to CDRS via RPC: %s", err.Error()))
+			utils.Logger.Crit(fmt.Sprintf("<%s> Could not connect to %s: %s",
+				utils.SessionS, utils.ChargerS, err.Error()))
 			exitChan <- true
 			return
 		}
+		// Start CDRCs
+				NewCDRcService(cfg *config.CGRConfig, cfgRld chan struct{})
 	}
-	cdrc, err := cdrc.NewCdrc(cdrcCfgs, httpSkipTlsCheck, cdrsConn, closeChan,
-		cfg.GeneralCfg().DefaultTimezone, filterS)
-	if err != nil {
-		utils.Logger.Crit(fmt.Sprintf("Cdrc config parsing error: %s", err.Error()))
-		exitChan <- true
-		return
-	}
-	if err := cdrc.Run(); err != nil {
-		utils.Logger.Crit(fmt.Sprintf("Cdrc run error: %s", err.Error()))
-		exitChan <- true // If run stopped, something is bad, stop the application
-		return
 	}
 }
+
 
 func startSessionS(internalSMGChan, internalRaterChan, internalResourceSChan, internalThresholdSChan,
 	internalStatSChan, internalSupplierSChan, internalAttrSChan, internalCDRSChan, internalChargerSChan,
@@ -1753,7 +1703,7 @@ func main() {
 	}
 
 	// Start CDRC components if necessary
-	go startCdrcs(internalCdrSChan, internalRaterChan, internalDispatcherSChan, filterSChan, exitChan)
+	go startCDRcS(internalCdrSChan, internalDispatcherSChan, filterSChan, exitChan)
 
 	// Start SM-Generic
 	if cfg.SessionSCfg().Enabled {
