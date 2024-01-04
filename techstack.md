@@ -1,7 +1,8 @@
 <!--
---- Readme.md Snippet without images Start ---
+&lt;--- Readme.md Snippet without images Start ---&gt;
 ## Tech Stack
 ubogdan/cgrates is built on the following main stack:
+
 - [Drone.io](https://drone.io/) – Continuous Integration
 - [Vagrant](http://www.vagrantup.com/) – Virtual Machine Management
 - [Python](https://www.python.org) – Languages
@@ -20,11 +21,13 @@ ubogdan/cgrates is built on the following main stack:
 - [Travis CI](http://travis-ci.com/) – Continuous Integration
 
 Full tech stack [here](/techstack.md)
---- Readme.md Snippet without images End ---
 
---- Readme.md Snippet with images Start ---
+&lt;--- Readme.md Snippet without images End ---&gt;
+
+&lt;--- Readme.md Snippet with images Start ---&gt;
 ## Tech Stack
 ubogdan/cgrates is built on the following main stack:
+
 - <img width='25' height='25' src='https://img.stackshare.io/service/668/R_wMcCqN_400x400.png' alt='Drone.io'/> [Drone.io](https://drone.io/) – Continuous Integration
 - <img width='25' height='25' src='https://img.stackshare.io/service/768/150px-Vagrant.png' alt='Vagrant'/> [Vagrant](http://www.vagrantup.com/) – Virtual Machine Management
 - <img width='25' height='25' src='https://img.stackshare.io/service/993/pUBY5pVj.png' alt='Python'/> [Python](https://www.python.org) – Languages
@@ -43,14 +46,15 @@ ubogdan/cgrates is built on the following main stack:
 - <img width='25' height='25' src='https://img.stackshare.io/service/460/Lu6cGu0z_400x400.png' alt='Travis CI'/> [Travis CI](http://travis-ci.com/) – Continuous Integration
 
 Full tech stack [here](/techstack.md)
---- Readme.md Snippet with images End ---
+
+&lt;--- Readme.md Snippet with images End ---&gt;
 -->
 <div align="center">
 
 # Tech Stack File
 ![](https://img.stackshare.io/repo.svg "repo") [ubogdan/cgrates](https://github.com/ubogdan/cgrates)![](https://img.stackshare.io/public_badge.svg "public")
 <br/><br/>
-|23<br/>Tools used|11/09/23 <br/>Report generated|
+|24<br/>Tools used|01/04/24 <br/>Report generated|
 |------|------|
 </div>
 
@@ -232,18 +236,19 @@ Full tech stack [here](/techstack.md)
 </table>
 
 
-## <img src='https://img.stackshare.io/group.svg' /> Open source packages (4)</h2>
+## <img src='https://img.stackshare.io/group.svg' /> Open source packages (5)</h2>
 
-## <img width='24' height='24' src='https://img.stackshare.io/service/12572/-RIWgodF_400x400.jpg'/> PyPI (4)
+## <img width='24' height='24' src='https://img.stackshare.io/service/12572/-RIWgodF_400x400.jpg'/> PyPI (5)
 
 |NAME|VERSION|LAST UPDATED|LAST UPDATED BY|LICENSE|VULNERABILITIES|
 |:------|:------|:------|:------|:------|:------|
-|[alabaster](https://pypi.org/alabaster)|v0.7|11/01/21|andronache |BSD-3-Clause|N/A|
-|[mock](https://pypi.org/mock)|v1.0.1|11/01/21|andronache |BSD-2-Clause|N/A|
-|[recommonmark](https://pypi.org/recommonmark)|v0.5.0|11/01/21|andronache |MIT|N/A|
-|[sphinx-rtd-theme](https://pypi.org/sphinx-rtd-theme)|v0.5|11/01/21|andronache |MIT|N/A|
+|[alabaster](https://pypi.org/project/alabaster)|v0.7|11/01/21|andronache |BSD-3-Clause|N/A|
+|[docutils](https://pypi.org/project/docutils)|v0.14|11/01/21|andronache |Unlicense,Python-2.0,BSD-2-Clause,CNRI-Python-GPL-Compatible|N/A|
+|[mock](https://pypi.org/project/mock)|v1.0.1|11/01/21|andronache |BSD-2-Clause|N/A|
+|[recommonmark](https://pypi.org/project/recommonmark)|v0.5.0|11/01/21|andronache |MIT|N/A|
+|[sphinx-rtd-theme](https://pypi.org/project/sphinx-rtd-theme)|v0.5|11/01/21|andronache |MIT|N/A|
 
 <br/>
 <div align='center'>
 
-Generated via [Stack File](https://github.com/apps/stack-file)
+Generated via [Stack File](https://github.com/marketplace/stack-file)
